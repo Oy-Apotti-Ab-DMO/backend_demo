@@ -19,3 +19,12 @@ Zero runtime dependencies: Node 22.18+/24 runs the `.ts` files directly.
 
 ## Apotti
 Set `PROFILE=apotti`. Endpoints in `src/config.ts` are assumed to follow the Epic layout; confirm via the sandbox's `.well-known/smart-configuration`.
+
+## Epic gotchas
+- **Authorization is per API *and* version.** The token's `scope` looks the same either way, but an app registered only for the
+  STU3 APIs gets `403 insufficient_scope` on `/FHIR/R4`. Register Patient.Read/Search (Demographics) (R4) for R4, or set
+  `FHIR_BASE` (e.g. `.../api/FHIR/STU3`) to match what is registered.
+- **Registration changes propagate slowly.** A new key set returned `invalid_client` for a few minutes; newly added APIs can
+  take longer to show up. `node --env-file=.env src/poll-token.ts` retries the token request until it succeeds.
+- **Patient search needs demographics**, not just a name: `family=Lopez` alone returns 0 results and `name=Lopez` returns 400.
+  Use e.g. `family` + `birthdate` (Epic sandbox: Lopez, 1987-09-12 returns 2 patients), or an `identifier`.
